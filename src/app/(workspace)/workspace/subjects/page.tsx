@@ -1,9 +1,7 @@
 import { Button } from "@/components/ui/button";
-import {
-  EmptySubject,
-  SubjectFrame,
-  SubjectListCard,
-} from "@/features/workspace";
+import { EmptySubject } from "@/features/subject/components/empty-subject";
+import { ListCard } from "@/features/subject/components/list-card";
+import { SubjectFrame } from "@/features/subject/components/subject-frame";
 import { getCookieHeader } from "@/lib/get-cookie";
 import { Response } from "@/types/response";
 import { Subject } from "@/types/subject";
@@ -39,7 +37,7 @@ export default async function SubjectsPage() {
                 Create Subject <Plus />
               </Button>
             </Link>
-            <SubjectListCard subjects={data} />
+            <ListCard subjects={data} />
           </div>
         ) : (
           <>

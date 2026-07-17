@@ -39,8 +39,8 @@ import {
 import {
   CreateTaskDTO,
   createTaskSchema,
-} from "@/features/workspace/lib/create-task-schema";
-import { postTaskAction } from "@/features/workspace/actions/post-task-action";
+} from "../lib/create-task-schema";
+import { postTaskAction } from "../api/post-task-action";
 
 // --- HELPER FUNCTION ---
 function formatDate(date: Date | undefined) {

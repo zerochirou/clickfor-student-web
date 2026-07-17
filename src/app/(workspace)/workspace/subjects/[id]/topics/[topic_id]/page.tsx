@@ -1,12 +1,10 @@
 import { Button } from "@/components/ui/button";
-import {
-  SubjectProvider,
-  TaskTable,
-  TopicFrame,
-  TopicHeader,
-  TopicNoteEditor,
-  TopicTabs,
-} from "@/features/workspace";
+import { SubjectProvider } from "@/features/subject/lib/subject-provider";
+import { TaskTable } from "@/features/task/components/task-table";
+import { TopicFrame } from "@/features/topic/components/topic-frame";
+import { TopicHeader } from "@/features/topic/components/topic-header";
+import { TopicNoteEditor } from "@/features/topic/components/topic-note-editor";
+import { TopicTabs } from "@/features/topic/components/topic-tabs";
 import { getCookieHeader } from "@/lib/get-cookie";
 import { Response } from "@/types/response";
 import { Subject } from "@/types/subject";

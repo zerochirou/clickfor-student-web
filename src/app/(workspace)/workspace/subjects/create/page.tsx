@@ -1,5 +1,5 @@
-import { SubjectFrame } from "@/features/workspace";
-import { CreateSubjectForm } from "@/features/workspace";
+import { CreateSubjectForm } from "@/features/subject/components/create-form";
+import { SubjectFrame } from "@/features/subject/components/subject-frame";
 
 export default function CreateSubjectPage() {
   return (

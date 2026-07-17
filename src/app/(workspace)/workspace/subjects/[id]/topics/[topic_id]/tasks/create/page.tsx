@@ -1,4 +1,5 @@
-import { CreateTaskForm, FrameTask } from "@/features/workspace";
+import { CreateTaskForm } from "@/features/task/components/create-form";
+import { FrameTask } from "@/features/task/components/frame-task";
 
 export default async function CreateTaskPage({
   params,

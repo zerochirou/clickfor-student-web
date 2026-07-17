@@ -1,12 +1,12 @@
 "use client";
 
 import { Editor } from "@/components/common/block-note/editor-dynamic";
-import { patchSubjectNoteAction } from "@/features/workspace/actions/patch-subject-note-action";
+import { patchTopicNoteAction } from "@/features/task/api/patch-topic-note-action";
 import { Block } from "@blocknote/core";
 import { useTransition } from "react";
 import { toast } from "sonner";
 
-export function SubjectNoteEditor({
+export function TopicNoteEditor({
   id,
   initialContent,
 }: {
@@ -17,7 +17,7 @@ export function SubjectNoteEditor({
 
   const handleSave = async (content: Block[]) => {
     startTransition(async () => {
-      const { success } = await patchSubjectNoteAction(id, content);
+      const { success } = await patchTopicNoteAction(id, content);
       if (!success) {
         toast.error("Gagal menyimpan catatan ke server")
       }

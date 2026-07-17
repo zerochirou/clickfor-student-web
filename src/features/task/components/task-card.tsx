@@ -40,7 +40,7 @@ import { Field, FieldError } from "@/components/ui/field";
 
 // Types & Actions
 import { Task } from "@/types/task";
-import { patchPartialTaskNoteAction } from "../../actions/patch-partial-task-action";
+import { patchPartialTaskNoteAction } from "../api/patch-partial-task-action";
 
 // --- SCHEMA UNTUK EDIT TASK ---
 const editTaskSchema = z.object({

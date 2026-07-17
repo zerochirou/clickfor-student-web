@@ -17,47 +17,44 @@ import { useTransition } from "react";
 import { toast } from "sonner";
 import { Spinner } from "@/components/ui/spinner";
 import { useRouter } from "next/navigation";
-import {
-  CreateTopicDTO,
-  createTopicSchema,
-} from "@/features/workspace/lib/create-topic-schema";
-import { postTopicAction } from "@/features/workspace/actions/post-topic-action";
+import { postSubjectAction } from "../api/post-subject-action";
+import { CreateSubjectDTO, createSubjectSchema } from "../lib/create-subject-schema";
 
-export function CreateTopicForm({ id }: { id: string }) {
-  const router = useRouter();
+export function CreateSubjectForm() {
+  const router = useRouter()
   const [isPending, startTransition] = useTransition();
-  const form = useForm<CreateTopicDTO>({
-    resolver: zodResolver(createTopicSchema),
+  const form = useForm<CreateSubjectDTO>({
+    resolver: zodResolver(createSubjectSchema),
     defaultValues: {
       name: "",
+      teacher: "",
       description: "",
       minAverageScore: 0,
+      image: undefined,
     },
   });
 
-  const handleCreateTopic = async (data: CreateTopicDTO) => {
+  const handleCreateSubject = async (data: CreateSubjectDTO) => {
     startTransition(async () => {
-      const { success } = await postTopicAction(data, id);
+      const { success } = await postSubjectAction(data);
       if (success) {
-        toast.success("Topic created successfully");
-        router.push("/workspace/topics");
+        toast.success("Subject created successfully");
+        router.push("/workspace/subjects")
       } else {
-        toast.error("Failed to create topic");
+        toast.error("Failed to create subject");
       }
     });
   };
 
   return (
     <form
-      id="create-topic-form"
-      onSubmit={form.handleSubmit(handleCreateTopic)}
+      id="create-subject-form"
+      onSubmit={form.handleSubmit(handleCreateSubject)}
       className="space-y-6"
     >
-      <div className="font-bold text-3xl mt-2">Create Subtrack</div>
-      <div className="opacity-50 -mt-4">
-        subtrack is a subsection of the main subject
-      </div>
-
+      <FieldGroup>
+        <div className="font-semibold text-3xl">Create Subject</div>
+      </FieldGroup>
       <FieldGroup>
         {/* NAME FIELD */}
         <Controller
@@ -65,12 +62,12 @@ export function CreateTopicForm({ id }: { id: string }) {
           control={form.control}
           render={({ field, fieldState }) => (
             <Field data-invalid={fieldState.invalid}>
-              <FieldLabel htmlFor={field.name}>Topic Name</FieldLabel>
+              <FieldLabel htmlFor={field.name}>Subject Name</FieldLabel>
               <Input
                 {...field}
                 id={field.name}
                 aria-invalid={fieldState.invalid}
-                placeholder="e.g., Phytagoras"
+                placeholder="e.g., Mathematics"
                 autoComplete="off"
               />
               {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
@@ -78,7 +75,29 @@ export function CreateTopicForm({ id }: { id: string }) {
           )}
         />
 
-        {/* TOPIC DESCRIPTION FIELD */}
+        {/* TEACHER FIELD */}
+        <Controller
+          name="teacher"
+          control={form.control}
+          render={({ field, fieldState }) => (
+            <Field data-invalid={fieldState.invalid}>
+              <FieldLabel htmlFor={field.name}>Teacher Name</FieldLabel>
+              <Input
+                {...field}
+                value={field.value || ""}
+                id={field.name}
+                aria-invalid={fieldState.invalid}
+                autoComplete="off"
+              />
+              <FieldDescription>
+                Name of the assigned teacher (Optional).
+              </FieldDescription>
+              {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+            </Field>
+          )}
+        />
+
+        {/* DESCRIPTION FIELD */}
         <Controller
           name="description"
           control={form.control}
@@ -90,7 +109,7 @@ export function CreateTopicForm({ id }: { id: string }) {
                 value={field.value || ""}
                 id={field.name}
                 aria-invalid={fieldState.invalid}
-                placeholder="Brief description of the topic"
+                placeholder="Brief description of the subject"
                 autoComplete="off"
               />
               <FieldDescription>
@@ -124,6 +143,34 @@ export function CreateTopicForm({ id }: { id: string }) {
               />
               <FieldDescription>
                 Set the minimum passing score (Optional).
+              </FieldDescription>
+              {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+            </Field>
+          )}
+        />
+
+        {/* IMAGE FIELD */}
+        <Controller
+          name="image"
+          control={form.control}
+          render={({ field, fieldState }) => (
+            <Field data-invalid={fieldState.invalid}>
+              <FieldLabel htmlFor={field.name}>Subject Image</FieldLabel>
+              <Input
+                type="file"
+                accept="image/*"
+                id={field.name}
+                name={field.name}
+                onBlur={field.onBlur}
+                ref={field.ref}
+                aria-invalid={fieldState.invalid}
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  field.onChange(file || undefined);
+                }}
+              />
+              <FieldDescription>
+                Upload a cover image for the subject (Optional).
               </FieldDescription>
               {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
             </Field>

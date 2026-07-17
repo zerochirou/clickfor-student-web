@@ -1,17 +1,15 @@
-import {
-  SubjectFramePage,
-  SubjectProvider,
-  SubjectTabs,
-  TopicList,
-} from "@/features/workspace";
-import { SubjectNoteEditor } from "@/features/workspace/components/subject/page-subject/subject-note-editor";
-import { SubjectHeader } from "@/features/workspace";
 import { getCookieHeader } from "@/lib/get-cookie";
 import { Response } from "@/types/response";
 import { Subject } from "@/types/subject";
 import { ListTree, Route, TextAlignStart } from "lucide-react";
-import { TopicPath } from "@/features/workspace/components/topic/page-topic/topic-path";
 import { Topic } from "@/types/topic";
+import { SubjectProvider } from "@/features/subject/lib/subject-provider";
+import { SubjectFramePage } from "@/features/subject/components/subject-frame-page";
+import { SubjectTabs } from "@/features/subject/components/subject-tabs";
+import { SubjectNoteEditor } from "@/features/subject/components/subject-note-editor";
+import { TopicList } from "@/features/topic/components/topic-list";
+import { TopicPath } from "@/features/topic/components/topic-path";
+import { SubjectHeader } from "@/features/subject/components/subject-header";
 
 export default async function SubjectPage({
   params,

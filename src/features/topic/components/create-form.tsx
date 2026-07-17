@@ -1,10 +1,6 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  CreateSubjectDTO,
-  createSubjectSchema,
-} from "../../../lib/create-subject-schema";
 import { Controller, useForm } from "react-hook-form";
 import {
   Field,
@@ -18,46 +14,50 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Plus } from "lucide-react";
 import { useTransition } from "react";
-import { postSubjectAction } from "../../../actions/post-subject-action";
 import { toast } from "sonner";
 import { Spinner } from "@/components/ui/spinner";
 import { useRouter } from "next/navigation";
+import {
+  CreateTopicDTO,
+  createTopicSchema,
+} from "../lib/create-topic-schema";
+import { postTopicAction } from "@/features/task/api/post-topic-action";
 
-export function CreateSubjectForm() {
-  const router = useRouter()
+export function CreateTopicForm({ id }: { id: string }) {
+  const router = useRouter();
   const [isPending, startTransition] = useTransition();
-  const form = useForm<CreateSubjectDTO>({
-    resolver: zodResolver(createSubjectSchema),
+  const form = useForm<CreateTopicDTO>({
+    resolver: zodResolver(createTopicSchema),
     defaultValues: {
       name: "",
-      teacher: "",
       description: "",
       minAverageScore: 0,
-      image: undefined,
     },
   });
 
-  const handleCreateSubject = async (data: CreateSubjectDTO) => {
+  const handleCreateTopic = async (data: CreateTopicDTO) => {
     startTransition(async () => {
-      const { success } = await postSubjectAction(data);
+      const { success } = await postTopicAction(data, id);
       if (success) {
-        toast.success("Subject created successfully");
-        router.push("/workspace/subjects")
+        toast.success("Topic created successfully");
+        router.push("/workspace/topics");
       } else {
-        toast.error("Failed to create subject");
+        toast.error("Failed to create topic");
       }
     });
   };
 
   return (
     <form
-      id="create-subject-form"
-      onSubmit={form.handleSubmit(handleCreateSubject)}
+      id="create-topic-form"
+      onSubmit={form.handleSubmit(handleCreateTopic)}
       className="space-y-6"
     >
-      <FieldGroup>
-        <div className="font-semibold text-3xl">Create Subject</div>
-      </FieldGroup>
+      <div className="font-bold text-3xl mt-2">Create Subtrack</div>
+      <div className="opacity-50 -mt-4">
+        subtrack is a subsection of the main subject
+      </div>
+
       <FieldGroup>
         {/* NAME FIELD */}
         <Controller
@@ -65,12 +65,12 @@ export function CreateSubjectForm() {
           control={form.control}
           render={({ field, fieldState }) => (
             <Field data-invalid={fieldState.invalid}>
-              <FieldLabel htmlFor={field.name}>Subject Name</FieldLabel>
+              <FieldLabel htmlFor={field.name}>Topic Name</FieldLabel>
               <Input
                 {...field}
                 id={field.name}
                 aria-invalid={fieldState.invalid}
-                placeholder="e.g., Mathematics"
+                placeholder="e.g., Phytagoras"
                 autoComplete="off"
               />
               {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
@@ -78,29 +78,7 @@ export function CreateSubjectForm() {
           )}
         />
 
-        {/* TEACHER FIELD */}
-        <Controller
-          name="teacher"
-          control={form.control}
-          render={({ field, fieldState }) => (
-            <Field data-invalid={fieldState.invalid}>
-              <FieldLabel htmlFor={field.name}>Teacher Name</FieldLabel>
-              <Input
-                {...field}
-                value={field.value || ""}
-                id={field.name}
-                aria-invalid={fieldState.invalid}
-                autoComplete="off"
-              />
-              <FieldDescription>
-                Name of the assigned teacher (Optional).
-              </FieldDescription>
-              {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-            </Field>
-          )}
-        />
-
-        {/* DESCRIPTION FIELD */}
+        {/* TOPIC DESCRIPTION FIELD */}
         <Controller
           name="description"
           control={form.control}
@@ -112,7 +90,7 @@ export function CreateSubjectForm() {
                 value={field.value || ""}
                 id={field.name}
                 aria-invalid={fieldState.invalid}
-                placeholder="Brief description of the subject"
+                placeholder="Brief description of the topic"
                 autoComplete="off"
               />
               <FieldDescription>
@@ -146,34 +124,6 @@ export function CreateSubjectForm() {
               />
               <FieldDescription>
                 Set the minimum passing score (Optional).
-              </FieldDescription>
-              {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-            </Field>
-          )}
-        />
-
-        {/* IMAGE FIELD */}
-        <Controller
-          name="image"
-          control={form.control}
-          render={({ field, fieldState }) => (
-            <Field data-invalid={fieldState.invalid}>
-              <FieldLabel htmlFor={field.name}>Subject Image</FieldLabel>
-              <Input
-                type="file"
-                accept="image/*"
-                id={field.name}
-                name={field.name}
-                onBlur={field.onBlur}
-                ref={field.ref}
-                aria-invalid={fieldState.invalid}
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  field.onChange(file || undefined);
-                }}
-              />
-              <FieldDescription>
-                Upload a cover image for the subject (Optional).
               </FieldDescription>
               {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
             </Field>
