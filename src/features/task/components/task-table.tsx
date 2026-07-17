@@ -37,52 +37,44 @@ export function TaskTable({
     <div>
       {/* HEADER SECTION */}
       <div className="flex justify-between items-center mb-6">
-        <div>
-          <h2 className="text-3xl font-semibold tracking-tight">
-            Today&apos;s Tasks
-          </h2>
-          <div className="text-muted-foreground mt-1">{dateNow()}</div>
+        <div className="flex items-center gap-3">
+          <button onClick={() => setStatus("all")} className={getTabClass("all")}>
+            All
+            <Badge variant={status === "all" ? "default" : "outline"}>
+              {tasks.length}
+            </Badge>
+          </button>
+  
+          <span className="w-[1px] h-4 bg-border" />
+  
+          <button
+            onClick={() => setStatus("open")}
+            className={getTabClass("open")}
+          >
+            Open
+            <Badge variant={status === "open" ? "default" : "outline"}>
+              {openCount}
+            </Badge>
+          </button>
+  
+          <button
+            onClick={() => setStatus("closed")}
+            className={getTabClass("closed")}
+          >
+            Closed
+            <Badge variant={status === "closed" ? "default" : "outline"}>
+              {closedCount}
+            </Badge>
+          </button>
         </div>
 
         {/* Tombol New Task dibungkus Link (Sesuaikan href dengan route Anda) */}
-        <Link href={`/workspace/subjects/${subjectId}/topics/${topicId}/tasks/create`}>
-          <Button>
+        <Link href={`/workspace/subjects/${subjectId}/topics/${topicId}/tasks/create`} className="justify-end">
+          <Button variant={'outline'}>
             <Plus className="w-4 h-4 mr-2" />
             New Task
           </Button>
         </Link>
-      </div>
-
-      {/* FILTER TABS */}
-      <div className="flex items-center gap-3 mb-6">
-        <button onClick={() => setStatus("all")} className={getTabClass("all")}>
-          All
-          <Badge variant={status === "all" ? "default" : "outline"}>
-            {tasks.length}
-          </Badge>
-        </button>
-
-        <span className="w-[1px] h-4 bg-border" />
-
-        <button
-          onClick={() => setStatus("open")}
-          className={getTabClass("open")}
-        >
-          Open
-          <Badge variant={status === "open" ? "default" : "outline"}>
-            {openCount}
-          </Badge>
-        </button>
-
-        <button
-          onClick={() => setStatus("closed")}
-          className={getTabClass("closed")}
-        >
-          Closed
-          <Badge variant={status === "closed" ? "default" : "outline"}>
-            {closedCount}
-          </Badge>
-        </button>
       </div>
 
       {/* TASK LIST & EMPTY STATE */}

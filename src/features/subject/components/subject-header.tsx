@@ -209,7 +209,7 @@ export function SubjectHeader({ data }: { data: Subject }) {
                     onClick={() => startEditing("minAverageScore", values.minAverageScore)}
                     className="text-2xl font-bold tracking-tight cursor-pointer hover:bg-muted/50 rounded px-1 -ml-1 transition-colors border border-transparent hover:border-border hover:border-dashed"
                   >
-                    <NumberTicker value={values.minAverageScore} decimalPlaces={2} />
+                    <NumberTicker value={values.minAverageScore} decimalPlaces={1} />
                   </span>
                 )}
               </div>
@@ -226,7 +226,7 @@ export function SubjectHeader({ data }: { data: Subject }) {
               </div>
               <div className="min-h-8 flex items-center">
                 <span className="text-2xl font-bold tracking-tight px-1 -ml-1">
-                  <NumberTicker value={values.averageScore} decimalPlaces={2} />
+                  <NumberTicker value={values.averageScore} decimalPlaces={1} />
                 </span>
               </div>
             </div>
@@ -242,7 +242,7 @@ export function SubjectHeader({ data }: { data: Subject }) {
               </div>
               <div className="min-h-8 flex items-center">
                 <span className="text-2xl font-bold tracking-tight text-primary px-1 -ml-1">
-                  <NumberTicker value={values.efficientScore} decimalPlaces={2} />
+                  <NumberTicker value={values.efficientScore} />%
                 </span>
               </div>
             </div>

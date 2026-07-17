@@ -12,7 +12,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import { useTransition } from "react";
 import { toast } from "sonner";
 import { Spinner } from "@/components/ui/spinner";
@@ -37,10 +37,10 @@ export function CreateTopicForm({ id }: { id: string }) {
 
   const handleCreateTopic = async (data: CreateTopicDTO) => {
     startTransition(async () => {
-      const { success } = await postTopicAction(data, id);
+      const { success, data: topic } = await postTopicAction(data, id);
       if (success) {
         toast.success("Topic created successfully");
-        router.push("/workspace/topics");
+        router.push(`/workspace/subjects/${id}/topics/${topic.id}`);
       } else {
         toast.error("Failed to create topic");
       }
@@ -138,7 +138,7 @@ export function CreateTopicForm({ id }: { id: string }) {
           </>
         ) : (
           <>
-            Submit <Plus />
+            Submit <ChevronRight/>
           </>
         )}
       </Button>

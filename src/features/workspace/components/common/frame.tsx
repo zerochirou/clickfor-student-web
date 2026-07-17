@@ -11,7 +11,7 @@ export function WorkspaceFrame({ children }: { children: React.ReactNode }) {
     <SidebarProvider>
       <AppSidebar />
       <SidebarInset>
-        <header className="flex px-4 h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
+        <header className="md:flex hidden px-4 h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
           <BreadcrumbDynamic />
         </header>
         <div className="flex flex-1 flex-col gap-4 md:p-4 p-2 pt-0">

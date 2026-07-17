@@ -23,8 +23,8 @@ export function HeaderSidebar() {
             <Asterisk />
           </div>
           <div className="grid flex-1 text-left text-sm leading-tight">
-            <span className="truncate font-medium">Chirou Tracker</span>
-            <span className="truncate text-xs">Free</span>
+            <span className="truncate font-medium">Clickfor Student</span>
+            <span className="truncate text-xs">Beta mode</span>
           </div>
           <ChevronsRight className="ml-auto" />
         </SidebarMenuButton>

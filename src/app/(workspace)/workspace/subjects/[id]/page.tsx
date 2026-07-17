@@ -83,14 +83,14 @@ export default async function SubjectPage({
               ),
               content: <TopicList id={id} topics={topics.data} />,
             },
-            {
-              title: (
-                <span className="flex flex-row items-center gap-2">
-                  <Route /> Learning Path
-                </span>
-              ),
-              content: <TopicPath />,
-            },
+            // {
+            //   title: (
+            //     <span className="flex flex-row items-center gap-2">
+            //       <Route /> Learning Path
+            //     </span>
+            //   ),
+            //   content: <TopicPath />,
+            // },
           ]}
         />
       </SubjectFramePage>

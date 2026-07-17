@@ -313,7 +313,7 @@ export function TopicHeader({ data }: { data: Topic }) {
                   >
                     <NumberTicker
                       value={values.minAverageScore}
-                      decimalPlaces={2}
+                      decimalPlaces={1}
                     />
                   </span>
                 )}
@@ -340,7 +340,7 @@ export function TopicHeader({ data }: { data: Topic }) {
               </div>
               <div className="min-h-8 flex items-center">
                 <span className="text-2xl font-bold tracking-tight px-1 -ml-1">
-                  <NumberTicker value={values.averageScore} decimalPlaces={2} />
+                  <NumberTicker value={values.averageScore} decimalPlaces={1} />
                 </span>
               </div>
             </div>
@@ -367,8 +367,8 @@ export function TopicHeader({ data }: { data: Topic }) {
                 <span className="text-2xl font-bold tracking-tight text-primary px-1 -ml-1">
                   <NumberTicker
                     value={values.efficientScore}
-                    decimalPlaces={2}
                   />
+                  %
                 </span>
               </div>
             </div>

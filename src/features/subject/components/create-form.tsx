@@ -36,10 +36,10 @@ export function CreateSubjectForm() {
 
   const handleCreateSubject = async (data: CreateSubjectDTO) => {
     startTransition(async () => {
-      const { success } = await postSubjectAction(data);
+      const { success, data: subject } = await postSubjectAction(data);
       if (success) {
         toast.success("Subject created successfully");
-        router.push("/workspace/subjects")
+        router.push(`/workspace/subjects/${subject.id}`)
       } else {
         toast.error("Failed to create subject");
       }
@@ -150,7 +150,7 @@ export function CreateSubjectForm() {
         />
 
         {/* IMAGE FIELD */}
-        <Controller
+        {/*<Controller
           name="image"
           control={form.control}
           render={({ field, fieldState }) => (
@@ -175,7 +175,7 @@ export function CreateSubjectForm() {
               {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
             </Field>
           )}
-        />
+        />*/}
       </FieldGroup>
 
       <Button type="submit" className="w-full md:w-auto">
