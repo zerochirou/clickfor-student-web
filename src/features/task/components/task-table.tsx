@@ -5,11 +5,9 @@ import Link from "next/link";
 import { Plus } from "lucide-react";
 
 import { Task } from "@/types/task";
-import { dateNow } from "../../workspace/lib/date-now";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { TaskCard } from "./task-card";
-import { task } from "better-auth/react";
 
 export function TaskTable({
   tasks,

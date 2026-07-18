@@ -22,7 +22,6 @@ import { useState, useTransition, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { patchPartialTopicNoteAction } from "@/features/task/api/patch-partial-topic-action";
 import { useSubject } from "@/features/subject/lib/subject-provider";
-import { Separator } from "@/components/ui/separator";
 import Link from "next/link";
 
 export function TopicHeader({ data }: { data: Topic }) {

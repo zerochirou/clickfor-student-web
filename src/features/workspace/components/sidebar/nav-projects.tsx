@@ -19,7 +19,6 @@ import {
 import {
   MoreHorizontalIcon,
   FolderIcon,
-  ArrowRightIcon,
   Trash2Icon,
   Table2,
 } from "lucide-react";
