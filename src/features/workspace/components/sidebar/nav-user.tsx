@@ -19,14 +19,22 @@ import {
 import { authClient } from "@/lib/auth-client";
 import {
   ChevronsUpDownIcon,
-  SparklesIcon,
   BadgeCheckIcon,
-  CreditCardIcon,
-  BellIcon,
   LogOutIcon,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 export function NavUser() {
+  const router = useRouter()
+  const handleLogout = async () => {
+    await authClient.signOut({
+      fetchOptions: {
+        onSuccess: () => {
+          router.push("/login")
+        }
+      }
+    })
+  };
   const { isMobile } = useSidebar();
   const { data } = authClient.useSession();
   return (
@@ -82,30 +90,30 @@ export function NavUser() {
                 </div>
               </DropdownMenuLabel>
             </DropdownMenuGroup>
-            <DropdownMenuSeparator />
+            {/*<DropdownMenuSeparator />
             <DropdownMenuGroup>
               <DropdownMenuItem>
                 <SparklesIcon />
                 Upgrade to Pro
               </DropdownMenuItem>
-            </DropdownMenuGroup>
+            </DropdownMenuGroup>*/}
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
               <DropdownMenuItem>
                 <BadgeCheckIcon />
                 Account
               </DropdownMenuItem>
-              <DropdownMenuItem>
+              {/*<DropdownMenuItem>
                 <CreditCardIcon />
                 Billing
-              </DropdownMenuItem>
-              <DropdownMenuItem>
+              </DropdownMenuItem>*/}
+              {/*<DropdownMenuItem>
                 <BellIcon />
                 Notifications
-              </DropdownMenuItem>
+              </DropdownMenuItem>*/}
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={handleLogout}>
               <LogOutIcon />
               Log out
             </DropdownMenuItem>

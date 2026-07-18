@@ -12,7 +12,7 @@ export function GithubAuth() {
     });
   };
   return (
-    <Button variant="outline" type="button" onClick={signIn}>
+    <Button variant="secondary" type="button" onClick={signIn}>
       <Image src={'/images/brand/github.svg'} alt="Facebook" width={15} height={15} />
       <span>GitHub</span>
     </Button>
