@@ -3,13 +3,13 @@ import { BreadcrumbDynamic } from "./breadcrumb-dynamic"
 import {
   SidebarInset,
   SidebarProvider,
-  SidebarTrigger,
 } from "@/components/ui/sidebar"
+import { Subject } from "@/types/subject"
 
-export function WorkspaceFrame({ children }: { children: React.ReactNode }) {
+export function WorkspaceFrame({ children, subjects }: { children: React.ReactNode, subjects: Subject[] }) {
   return (
     <SidebarProvider>
-      <AppSidebar />
+      <AppSidebar subjects={subjects}/>
       <SidebarInset>
         <header className="md:flex hidden px-4 h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
           <BreadcrumbDynamic />

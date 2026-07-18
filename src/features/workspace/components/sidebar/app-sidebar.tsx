@@ -3,7 +3,7 @@
 import * as React from "react";
 import { Suspense } from "react";
 import { NavMain } from "@/features/workspace/components/sidebar/nav-main";
-// import { NavProjects } from "@/features/workspace/components/sidebar/nav-projects";
+import { NavProjects } from "@/features/workspace/components/sidebar/nav-projects";
 import { NavUser } from "@/features/workspace/components/sidebar/nav-user";
 import { HeaderSidebar } from "@/features/workspace/components/sidebar/header-sidebar";
 import {
@@ -17,16 +17,18 @@ import {
   SidebarRail,
 } from "@/components/ui/sidebar";
 import { sidebarLinks } from "../../constants/sidebar-links";
+import { Subject } from "@/types/subject";
 
-export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+
+export function AppSidebar({ subjects }: {subjects: Subject[]}) {
   return (
-    <Sidebar collapsible="icon" variant="floating" {...props}>
+    <Sidebar collapsible="icon" variant="floating">
       <SidebarHeader>
         <HeaderSidebar />
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={sidebarLinks} />
-        {/*<NavProjects projects={sidebarLinks.projects} />*/}
+        <NavProjects subjects={subjects} />
       </SidebarContent>
       <SidebarFooter>
         <Suspense

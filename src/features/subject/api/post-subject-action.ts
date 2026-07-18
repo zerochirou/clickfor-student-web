@@ -33,6 +33,5 @@ export async function postSubjectAction(data: CreateSubjectDTO) {
   );
 
   const result: Response<Subject> = await response.json();
-  console.log(result);
   return result;
 }

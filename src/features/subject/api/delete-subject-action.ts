@@ -21,6 +21,5 @@ export async function deleteSubjectAction(id: string) {
   );
 
   const result: Response<Subject> = await response.json();
-  console.log(result);
   return result;
 }

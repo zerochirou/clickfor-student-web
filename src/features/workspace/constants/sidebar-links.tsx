@@ -14,15 +14,5 @@ export const sidebarLinks = [
     title: "Subjects",
     url: "/subjects",
     icon: <Table2Icon />,
-    items: [
-      {
-        title: "Topics",
-        url: "/subjects/topics",
-      },
-      {
-        title: "Task",
-        url: "/subjects/tasks",
-      }
-    ],
   },
 ];

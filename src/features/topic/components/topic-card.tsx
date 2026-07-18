@@ -26,7 +26,7 @@ export function TopicCard({ topic }: { topic: Topic }) {
           <CardTitle className="text-xl font-bold tracking-wider">
             {topic.name}
           </CardTitle>
-          <CardDescription>{topic.description}</CardDescription>
+          <CardDescription className="md:w-100 w-80 truncate">{topic.description}</CardDescription>
         </div>
         <div className="flex items-center gap-2">
           <Dialog>

@@ -31,6 +31,5 @@ export async function postTopicAction(data: CreateTopicDTO, subjectId: string) {
   );
 
   const result: Response<Subject> = await response.json();
-  console.log(result);
   return result;
 }

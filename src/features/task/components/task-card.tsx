@@ -60,6 +60,9 @@ const editTaskSchema = z.object({
   name: z.string().min(1, "Task name is required"),
   description: z.string().optional(),
   dueDate: z.string().optional().nullable(),
+  // Tambahkan ini
+  minAverageScore: z.coerce.number().optional().nullable(),
+  efficientScore: z.coerce.number().optional().nullable(),
 });
 type EditTaskDTO = z.infer<typeof editTaskSchema>;
 
@@ -114,17 +117,18 @@ function InlineDueDateField({
       />
       <InputGroupAddon align="inline-end">
         <Popover open={open} onOpenChange={setOpen}>
-          <PopoverTrigger render={
-            
-            <InputGroupButton
-              variant="ghost"
-              size="icon-xs"
-              type="button"
-              className="h-9 w-9"
-            >
-              <CalendarIcon className="w-4 h-4" />
-            </InputGroupButton>
-          }/>
+          <PopoverTrigger
+            render={
+              <InputGroupButton
+                variant="ghost"
+                size="icon-xs"
+                type="button"
+                className="h-9 w-9"
+              >
+                <CalendarIcon className="w-4 h-4" />
+              </InputGroupButton>
+            }
+          />
           <PopoverContent className="w-auto p-0" align="end">
             <Calendar
               mode="single"
@@ -154,11 +158,11 @@ function InlineDueDateField({
 export function TaskCard({ task }: { task: Task }) {
   const [isPending, startTransition] = useTransition();
   const [isEditing, setIsEditing] = useState(false);
-  
+
   // State khusus untuk Dialog Score
   const [isScoreDialogOpen, setIsScoreDialogOpen] = useState(false);
   const [scoreInput, setScoreInput] = useState("");
-  
+
   const router = useRouter();
 
   const form = useForm<EditTaskDTO>({
@@ -167,13 +171,16 @@ export function TaskCard({ task }: { task: Task }) {
       name: task.name,
       description: task.description || "",
       dueDate: task.dueDate || null,
+      // Tambahkan ini
+      minAverageScore: task.minAverageScore ?? null,
+      efficientScore: task.efficientScore ?? null,
     },
   });
 
   // Action ketika tombol checklist ditekan di tampilan awal
   const handleToggleClick = () => {
     if (isPending || isEditing) return;
-    
+
     if (task.status === "open") {
       // Jika mau menyelesaikan task, buka dialog dulu
       setIsScoreDialogOpen(true);
@@ -184,19 +191,27 @@ export function TaskCard({ task }: { task: Task }) {
   };
 
   // Action untuk memproses pembaruan status ke API (Bisa dipanggil dari Card atau dari dalam Dialog)
-  const submitStatusUpdate = (newStatus: "open" | "closed", finalScore?: string) => {
+  const submitStatusUpdate = (
+    newStatus: "open" | "closed",
+    finalScore?: string,
+  ) => {
     startTransition(async () => {
       const formData = new FormData();
       formData.append("status", newStatus);
-      
+
       if (finalScore) {
         formData.append("totalScore", finalScore);
       }
 
-      const { success, errors } = await patchPartialTaskNoteAction(task.id, formData);
-      
+      const { success, errors } = await patchPartialTaskNoteAction(
+        task.id,
+        formData,
+      );
+
       if (success) {
-        toast.success(`Task ${newStatus === "closed" ? "completed" : "reopened"}`);
+        toast.success(
+          `Task ${newStatus === "closed" ? "completed" : "reopened"}`,
+        );
         setIsScoreDialogOpen(false);
         setScoreInput(""); // Reset input setelah berhasil
         router.refresh();
@@ -213,11 +228,14 @@ export function TaskCard({ task }: { task: Task }) {
       const formData = new FormData();
       formData.append("name", data.name);
       formData.append("description", data.description || "");
-      if (data.dueDate) {
-        formData.append("dueDate", data.dueDate);
-      } else {
-        formData.append("dueDate", ""); // Clear date
-      }
+      formData.append("dueDate", data.dueDate || "");
+
+      // Tambahkan ini
+      formData.append(
+        "minAverageScore",
+        data.minAverageScore?.toString() || "",
+      );
+      formData.append("efficientScore", data.efficientScore?.toString() || "");
 
       const { success, errors } = await patchPartialTaskNoteAction(
         task.id,
@@ -376,6 +394,55 @@ export function TaskCard({ task }: { task: Task }) {
                   control={form.control}
                   render={({ field }) => <InlineDueDateField field={field} />}
                 />
+                <div className="flex gap-4">
+                  <Controller
+                    name="minAverageScore"
+                    control={form.control}
+                    render={({ field }) => (
+                      <Field className="flex-1">
+                        <FieldLabel className="text-xs">Min Score</FieldLabel>
+                        <Input
+                          {...field}
+                          type="number"
+                          placeholder="0"
+                          className="h-9"
+                          value={field.value ?? ""}
+                          onChange={(e) =>
+                            field.onChange(
+                              e.target.value === ""
+                                ? null
+                                : Number(e.target.value),
+                            )
+                          }
+                        />
+                      </Field>
+                    )}
+                  />
+
+                  <Controller
+                    name="efficientScore"
+                    control={form.control}
+                    render={({ field }) => (
+                      <Field className="flex-1">
+                        <FieldLabel className="text-xs">Efficient %</FieldLabel>
+                        <Input
+                          {...field}
+                          type="number"
+                          placeholder="0"
+                          className="h-9"
+                          value={field.value ?? ""}
+                          onChange={(e) =>
+                            field.onChange(
+                              e.target.value === ""
+                                ? null
+                                : Number(e.target.value),
+                            )
+                          }
+                        />
+                      </Field>
+                    )}
+                  />
+                </div>
               </div>
 
               <div className="flex justify-end gap-2 pt-2 border-t mt-4">
@@ -411,10 +478,12 @@ export function TaskCard({ task }: { task: Task }) {
           <DialogHeader>
             <DialogTitle>Complete Task</DialogTitle>
             <DialogDescription>
-              Please enter the final score for <span className="font-medium text-foreground">{task.name}</span> before marking it as completed.
+              Please enter the final score for{" "}
+              <span className="font-medium text-foreground">{task.name}</span>{" "}
+              before marking it as completed.
             </DialogDescription>
           </DialogHeader>
-          
+
           <div className="grid gap-4 py-4">
             <Field>
               <FieldLabel htmlFor="score">Total Score</FieldLabel>
@@ -434,7 +503,7 @@ export function TaskCard({ task }: { task: Task }) {
               />
             </Field>
           </div>
-          
+
           <DialogFooter>
             <Button
               type="button"
@@ -449,7 +518,11 @@ export function TaskCard({ task }: { task: Task }) {
               onClick={() => submitStatusUpdate("closed", scoreInput)}
               disabled={isPending || scoreInput.trim() === ""}
             >
-              {isPending ? <Spinner className="w-4 h-4 mr-2" /> : <Check className="w-4 h-4 mr-2" />}
+              {isPending ? (
+                <Spinner className="w-4 h-4 mr-2" />
+              ) : (
+                <Check className="w-4 h-4 mr-2" />
+              )}
               Submit & Complete
             </Button>
           </DialogFooter>
