@@ -1,6 +1,5 @@
 import { SubjectPieChart } from "@/features/workspace/components/chart/pie-chart";
 import { SubjectRadarChart } from "@/features/workspace/components/chart/radar-chart";
-import { SubjectRankBarChart } from "@/features/workspace/components/chart/subject-rank";
 import { TaskStatusRadialChart } from "@/features/workspace/components/chart/task-status-chart";
 import { columns } from "@/features/workspace/components/table/columns";
 import { DataTable } from "@/features/workspace/components/table/data-table";

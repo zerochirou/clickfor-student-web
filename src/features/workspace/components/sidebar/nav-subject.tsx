@@ -24,17 +24,33 @@ import {
 } from "lucide-react";
 import { Subject } from "@/types/subject";
 import { useRouter } from "next/navigation";
+import { useTransition } from "react";
+import { deleteSubjectAction } from "@/features/subject/api/delete-subject-action";
+import { toast } from "sonner";
 
-export function NavProjects({ subjects }: { subjects: Subject[] }) {
+export function NavSubjects({ subjects }: { subjects: Subject[] }) {
   const { isMobile } = useSidebar();
   const router = useRouter();
+
+  const [isPending, startTransition] = useTransition();
+  const handleDelete = async (id: string) => {
+    startTransition(async () => {
+      const { success } = await deleteSubjectAction(id);
+      if (success) {
+        toast.success("Subject deleted successfully");
+        router.refresh();
+      } else {
+        toast.error("Failed to delete subject");
+      }
+    });
+  };
   
   return (
     <SidebarGroup className="group-data-[collapsible=icon]:hidden">
       <SidebarGroupLabel>Subjects</SidebarGroupLabel>
       <SidebarMenu>
         {subjects.map((item) => (
-          <SidebarMenuItem key={item.name}>
+          <SidebarMenuItem key={item.id}>
             <SidebarMenuButton render={<a href={`/workspace/subjects/${item.id}`} />}>
               <Table2 />
               <span>{item.name}</span>
@@ -61,7 +77,7 @@ export function NavProjects({ subjects }: { subjects: Subject[] }) {
                   <span>View Project</span>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem variant="destructive">
+                <DropdownMenuItem variant="destructive" onClick={() => handleDelete(item.id)}>
                   <Trash2Icon />
                   <span>Delete Project</span>
                 </DropdownMenuItem>

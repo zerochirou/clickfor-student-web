@@ -20,7 +20,7 @@ import { NumberTicker } from "@/components/ui/number-ticker";
 import { Topic } from "@/types/topic";
 import { useState, useTransition, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { patchPartialTopicNoteAction } from "@/features/task/api/patch-partial-topic-action";
+import { patchPartialTopicNoteAction } from "../api/patch-partial-topic-action";
 import { useSubject } from "@/features/subject/lib/subject-provider";
 import Link from "next/link";
 

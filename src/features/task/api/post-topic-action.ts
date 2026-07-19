@@ -4,7 +4,7 @@ import { Subject } from "@/types/subject";
 import { Response } from "@/types/response";
 import { authCheck } from "@/lib/auth-check";
 import { getCookieHeader } from "@/lib/get-cookie";
-import { CreateTopicDTO } from "../../workspace/lib/create-topic-schema";
+import { CreateTopicDTO } from "@/features/topic/lib/create-topic-schema";
 
 export async function postTopicAction(data: CreateTopicDTO, subjectId: string) {
   await authCheck();

@@ -11,4 +11,5 @@ export interface Task {
   createdAt: string;
   updatedAt: string;
   dueDate: string;
+  content: string;
 }

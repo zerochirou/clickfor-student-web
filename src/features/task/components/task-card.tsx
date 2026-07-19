@@ -18,6 +18,7 @@ import {
   Check,
   ChartArea,
   Gauge,
+  Trash2,
 } from "lucide-react";
 
 // Komponen UI
@@ -54,6 +55,9 @@ import {
 // Types & Actions
 import { Task } from "@/types/task";
 import { patchPartialTaskNoteAction } from "../api/patch-partial-task-action";
+import { TaskNoteEditor } from "./task-note-editor";
+import { deleteTaskAction } from "../api/delete-task";
+import { Separator } from "@/components/ui/separator";
 
 // --- SCHEMA UNTUK EDIT TASK ---
 const editTaskSchema = z.object({
@@ -73,8 +77,7 @@ function formatReadableDate(dateString: string | undefined | null) {
   return new Intl.DateTimeFormat("en-US", {
     month: "short",
     day: "numeric",
-    year:
-      date.getFullYear() !== new Date().getFullYear() ? "numeric" : undefined,
+    year: "numeric"
   }).format(date);
 }
 
@@ -158,6 +161,7 @@ function InlineDueDateField({
 export function TaskCard({ task }: { task: Task }) {
   const [isPending, startTransition] = useTransition();
   const [isEditing, setIsEditing] = useState(false);
+  const [isDeletingPending, startTransitionDelete] = useTransition();
 
   // State khusus untuk Dialog Score
   const [isScoreDialogOpen, setIsScoreDialogOpen] = useState(false);
@@ -176,6 +180,18 @@ export function TaskCard({ task }: { task: Task }) {
       efficientScore: task.efficientScore ?? null,
     },
   });
+
+  const handleDelete = () => {
+    startTransitionDelete(async () => {
+      const { success } = await deleteTaskAction(task.id);
+      if (success) {
+        toast.success("Successfully deleted task");
+        router.refresh();
+      } else {
+        toast.error("Failed to delete task");
+      }
+    });
+  };
 
   // Action ketika tombol checklist ditekan di tampilan awal
   const handleToggleClick = () => {
@@ -257,71 +273,28 @@ export function TaskCard({ task }: { task: Task }) {
   return (
     <>
       <Card
-        className={`transition-colors duration-300 overflow-hidden group py-0 rounded-sm ${
+        className={`transition-all min-w-2xl dark:bg-card bg-sidebar duration-300 overflow-hidden group py-0 rounded-lg ${
           task.status === "closed" && !isEditing
-            ? "bg-muted/40 border-dashed shadow-none"
-            : ""
-        } ${isEditing ? "ring-1 ring-primary shadow-md" : ""}`}
+            ? "bg-muted/30 border-dashed shadow-none"
+            : "dark:bg-card bg-sidebar shadow-sm hover:shadow-md border-border/60"
+        } ${isEditing ? "ring-2 ring-primary/20 shadow-md border-primary/30" : ""}`}
       >
         <CardContent className="p-0">
           {/* VIEW MODE */}
           {!isEditing && (
-            <div className="flex items-start justify-between p-4 gap-4 relative">
-              <div className="flex-1 space-y-1.5 pt-0.5">
-                <h3
-                  className={`text-xl transition-all duration-300 pr-8 ${
-                    task.status === "closed"
-                      ? "opacity-60 line-through text-muted-foreground"
-                      : "text-foreground"
-                  }`}
-                >
-                  {task.name}
-                </h3>
-
-                {task.description && (
-                  <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">
-                    {task.description}
-                  </p>
-                )}
-                <div className="flex gap-2 items-center">
-                  {formattedDate && (
-                    <Badge className="flex items-center gap-1.5 text-xs font-medium">
-                      <CalendarIcon className="w-3.5 h-3.5" />
-                      <span>{formattedDate}</span>
-                    </Badge>
-                  )}
-                  {task.minAverageScore !== undefined && (
-                    <Badge
-                      className="flex items-center gap-1.5 text-xs font-medium"
-                      variant="secondary"
-                    >
-                      <ChartArea className="w-3.5 h-3.5" />
-                      <span>Min: {task.minAverageScore}</span>
-                    </Badge>
-                  )}
-                  {task.averageScore !== undefined && (
-                    <Badge
-                      className="flex items-center gap-1.5 text-xs font-medium"
-                      variant="secondary"
-                    >
-                      <Gauge className="w-3.5 h-3.5" />
-                      <span>Efficient: {task.efficientScore}%</span>
-                    </Badge>
-                  )}
-                </div>
-              </div>
-
-              <div className="flex flex-col items-center gap-2 flex-shrink-0">
+            <div className="flex items-start gap-3 p-4 relative">
+              {/* KIRI: Tombol Toggle Status */}
+              <div className="flex-shrink-0 pt-0.5">
                 <button
                   type="button"
                   onClick={handleToggleClick}
                   disabled={isPending}
                   className={`
-                    relative flex items-center justify-center h-10 w-10 rounded-full
-                    transition-all duration-300 ease-out
-                    focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring
-                    ${isPending ? "cursor-not-allowed opacity-70" : ""}
-                  `}
+                      relative flex items-center justify-center h-6 w-6 rounded-full
+                      transition-all duration-300 ease-out outline-none
+                      focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2
+                      ${isPending ? "cursor-not-allowed opacity-70" : "cursor-pointer"}
+                    `}
                 >
                   <div
                     className={`absolute inset-0 rounded-full transition-transform duration-300 scale-0 group-hover:scale-100 ${
@@ -330,24 +303,90 @@ export function TaskCard({ task }: { task: Task }) {
                   />
                   <div className="relative z-10 transition-transform duration-300 active:scale-90 group-hover:scale-110">
                     {isPending && !isScoreDialogOpen ? (
-                      <CircleDashed className="w-6 h-6 animate-spin text-muted-foreground" />
+                      <CircleDashed className="w-5 h-5 animate-spin text-muted-foreground" />
                     ) : task.status === "closed" ? (
-                      <CircleCheck className="w-6 h-6 text-primary" />
+                      <CircleCheck className="w-5 h-5 text-primary" />
                     ) : (
-                      <Circle className="w-6 h-6 text-muted-foreground hover:text-foreground" />
+                      <Circle className="w-5 h-5 text-muted-foreground/60 group-hover:text-muted-foreground" />
                     )}
                   </div>
                 </button>
+              </div>
 
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon-xs"
-                  onClick={() => setIsEditing(true)}
-                  className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground h-7 w-7"
-                >
-                  <Pencil className="w-3.5 h-3.5" />
-                </Button>
+              {/* TENGAH: Konten Task */}
+              <div className="flex-1 space-y-2 min-w-0">
+                <div className="flex items-start justify-between gap-4">
+                  <h3
+                    className={`text-base font-semibold leading-tight transition-all duration-300 break-words ${
+                      task.status === "closed"
+                        ? "opacity-60 line-through text-muted-foreground"
+                        : "text-foreground"
+                    }`}
+                  >
+                    {task.name}
+                  </h3>
+
+                  {/* KANAN: Action Buttons (Edit & Delete) */}
+                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => setIsEditing(true)}
+                      className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                      title="Edit task"
+                    >
+                      <Pencil className="w-3.5 h-3.5" />
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={handleDelete}
+                      className="h-7 w-7 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                      title="Delete task"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </Button>
+                  </div>
+                </div>
+
+                {task.description && (
+                  <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed pr-10">
+                    {task.description}
+                  </p>
+                )}
+
+                {/* Badges */}
+                <div className="flex flex-wrap gap-2 items-center pt-1">
+                  {formattedDate && (
+                    <Badge
+                      variant="default"
+                      className="flex items-center gap-1.5 text-[11px] font-medium"
+                    >
+                      <CalendarIcon className="w-3 h-3" />
+                      <span>{formattedDate}</span>
+                    </Badge>
+                  )}
+                  {task.minAverageScore !== undefined && (
+                    <Badge
+                      className="flex items-center gap-1.5 text-[11px] font-medium"
+                      variant="secondary"
+                    >
+                      <ChartArea className="w-3 h-3 text-muted-foreground" />
+                      <span>Min: {task.minAverageScore}</span>
+                    </Badge>
+                  )}
+                  {task.averageScore !== undefined && (
+                    <Badge
+                      className="flex items-center gap-1.5 text-[11px] font-medium"
+                      variant="secondary"
+                    >
+                      <Gauge className="w-3 h-3 text-muted-foreground" />
+                      <span>Eff: {task.efficientScore}%</span>
+                    </Badge>
+                  )}
+                </div>
               </div>
             </div>
           )}
@@ -356,9 +395,10 @@ export function TaskCard({ task }: { task: Task }) {
           {isEditing && (
             <form
               onSubmit={form.handleSubmit(onSubmitEdit)}
-              className="p-4 space-y-3"
+              className="p-4 space-y-4 bg-muted/20"
             >
-              <div className="space-y-3">
+              <div className="space-y-4">
+                {/* Name Field */}
                 <Controller
                   name="name"
                   control={form.control}
@@ -367,7 +407,7 @@ export function TaskCard({ task }: { task: Task }) {
                       <Input
                         {...field}
                         placeholder="Task name"
-                        className="font-semibold text-base h-9"
+                        className="font-semibold text-base h-10 bg-background"
                         autoFocus
                       />
                       {fieldState.invalid && (
@@ -377,6 +417,7 @@ export function TaskCard({ task }: { task: Task }) {
                   )}
                 />
 
+                {/* Description Field */}
                 <Controller
                   name="description"
                   control={form.control}
@@ -384,28 +425,33 @@ export function TaskCard({ task }: { task: Task }) {
                     <Textarea
                       {...field}
                       placeholder="Add details..."
-                      className="text-sm min-h-[60px] resize-none"
+                      className="text-sm min-h-[80px] resize-none bg-background leading-relaxed"
                     />
                   )}
                 />
 
+                {/* Due Date */}
                 <Controller
                   name="dueDate"
                   control={form.control}
                   render={({ field }) => <InlineDueDateField field={field} />}
                 />
+
+                {/* Scores */}
                 <div className="flex gap-4">
                   <Controller
                     name="minAverageScore"
                     control={form.control}
                     render={({ field }) => (
                       <Field className="flex-1">
-                        <FieldLabel className="text-xs">Min Score</FieldLabel>
+                        <FieldLabel className="text-xs text-muted-foreground">
+                          Min Score
+                        </FieldLabel>
                         <Input
                           {...field}
                           type="number"
                           placeholder="0"
-                          className="h-9"
+                          className="h-9 bg-background mt-1.5"
                           value={field.value ?? ""}
                           onChange={(e) =>
                             field.onChange(
@@ -424,12 +470,14 @@ export function TaskCard({ task }: { task: Task }) {
                     control={form.control}
                     render={({ field }) => (
                       <Field className="flex-1">
-                        <FieldLabel className="text-xs">Efficient %</FieldLabel>
+                        <FieldLabel className="text-xs text-muted-foreground">
+                          Efficient %
+                        </FieldLabel>
                         <Input
                           {...field}
                           type="number"
                           placeholder="0"
-                          className="h-9"
+                          className="h-9 bg-background mt-1.5"
                           value={field.value ?? ""}
                           onChange={(e) =>
                             field.onChange(
@@ -445,34 +493,56 @@ export function TaskCard({ task }: { task: Task }) {
                 </div>
               </div>
 
-              <div className="flex justify-end gap-2 pt-2 border-t mt-4">
+              {/* ACTION BUTTONS (EDIT MODE) */}
+              <div className="flex items-center justify-between pt-4 border-t border-border mt-4">
+                {/* Tombol Delete di Edit Mode */}
                 <Button
                   type="button"
                   variant="ghost"
                   size="sm"
-                  onClick={() => {
-                    form.reset();
-                    setIsEditing(false);
-                  }}
+                  onClick={handleDelete}
+                  className="text-destructive hover:bg-destructive/10 hover:text-destructive"
                   disabled={isPending}
                 >
-                  <X className="w-4 h-4 mr-1.5" /> Cancel
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Delete
                 </Button>
-                <Button type="submit" size="sm" disabled={isPending}>
-                  {isPending ? (
-                    <Spinner className="w-4 h-4 mr-1.5" />
-                  ) : (
-                    <Check className="w-4 h-4 mr-1.5" />
-                  )}
-                  Save Changes
-                </Button>
+
+                {/* Tombol Cancel & Save */}
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      form.reset();
+                      setIsEditing(false);
+                    }}
+                    disabled={isPending}
+                  >
+                    Cancel
+                  </Button>
+                  <Button type="submit" size="sm" disabled={isPending}>
+                    {isPending ? (
+                      <CircleDashed className="w-4 h-4 mr-2 animate-spin" />
+                    ) : (
+                      <Check className="w-4 h-4 mr-2" />
+                    )}
+                    Save Changes
+                  </Button>
+                </div>
               </div>
             </form>
           )}
+          <Separator className={'mb-2'}/>
+          <div className="p-4">
+            <TaskNoteEditor id={task.id} initialContent={task.content} />
+          </div>
         </CardContent>
+       
       </Card>
 
-      {/* DIALOG UNTUK INPUT SCORE SAAT FINISH TASK */}
+      {/* DIALOG UNTUK INPUT SCORE SAAT FINISH TASK (Tetap sama) */}
       <Dialog open={isScoreDialogOpen} onOpenChange={setIsScoreDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>

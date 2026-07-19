@@ -16,7 +16,6 @@ import { Block, filterSuggestionItems } from "@blocknote/core";
 import { en } from "@blocknote/core/locales";
 import { CustomSlashMenu } from "./editor-menu-custom";
 
-// --- Import Shadcn UI Components ---
 import {
   AlertDialog,
   AlertDialogAction,
@@ -34,11 +33,25 @@ import { Badge } from "@/components/ui/badge";
 
 interface EditorProps {
   onSave?: (data: Block[]) => Promise<void>;
-  onFetchLatest?: () => Promise<string | null>; // API ambil data server
+  onFetchLatest?: () => Promise<string | null>;
   initialContent?: string;
   documentId: string;
   isPending?: boolean;
 }
+
+// Fungsi helper yang ditaruh di luar agar rapi
+const parseDataSafe = (data: string | null) => {
+  if (!data || data === "null" || data === "") return [];
+  if (typeof data === "string") {
+    try {
+      const parsed = JSON.parse(data);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  }
+  return Array.isArray(data) ? data : [];
+};
 
 export default function Editor({
   onSave,
@@ -51,16 +64,17 @@ export default function Editor({
   const [lastSynced, setLastSynced] = useState<Date | null>(null);
   const [hasUnsavedUI, setHasUnsavedUI] = useState(false);
 
-  // State Konflik
   const [conflictData, setConflictData] = useState<string | null>(null);
 
   const hasUnsavedChanges = useRef(false);
   const storageKey = `editor_draft_${documentId}`;
 
-  // --- SOLUSI 1: Fungsi aman untuk mengambil data awal (Hindari Null) ---
+  // KUNCI PERBAIKAN: Ingatan terakhir tentang isi server
+  // Saat pertama kali load, ingatan kita adalah "initialContent"
+  const lastKnownServerRef = useRef<string>(JSON.stringify(parseDataSafe(String(initialContent))));
+
   const getInitialData = () => {
     if (typeof window === "undefined") return undefined;
-    
     try {
       const localDraft = localStorage.getItem(storageKey);
       if (localDraft && localDraft !== "null" && localDraft !== "[]") {
@@ -72,8 +86,6 @@ export default function Editor({
     } catch (e) {
       console.error("Gagal mem-parsing data awal", e);
     }
-    
-    // Kembalikan undefined agar BlockNote membuat array kosong standar dengan aman
     return undefined; 
   };
 
@@ -91,7 +103,7 @@ export default function Editor({
       cellTextColor: true,
       headers: true,
     },
-    initialContent: getInitialData(), // Menggunakan fungsi yang aman
+    initialContent: getInitialData(),
   });
 
   useEffect(() => {
@@ -102,57 +114,32 @@ export default function Editor({
   const currentTheme =
     resolvedTheme === "light" || resolvedTheme === "dark" ? resolvedTheme : "dark";
 
-  // --- SOLUSI 2: Pengecekan Perbedaan Cerdas (Abaikan Null vs Paragraf Kosong) ---
+  // --- LOGIKA PENGECEKAN BARU YANG BENAR ---
   const checkServerDifference = async () => {
     if (!onFetchLatest) return false;
+    
     try {
       const rawLatest = await onFetchLatest();
-      
-      // Fungsi untuk menormalisasi data dari server (amankan null / string kosong)
-      const parseServerData = (data: null | string) => {
-        if (!data || data === "null" || data === "") return [];
-        if (typeof data === "string") {
-          try {
-            const parsed = JSON.parse(data);
-            return Array.isArray(parsed) ? parsed : [];
-          } catch {
-            return [];
-          }
-        }
-        return Array.isArray(data) ? data : [];
-      };
+      const serverBlocks = parseDataSafe(rawLatest);
+      const currentServerString = JSON.stringify(serverBlocks);
 
-      const serverBlocks = parseServerData(rawLatest);
-      const localBlocks = editor.document;
-
-      // CEK CERDAS: Jika dokumen baru (server kosong) dan editor lokal juga cuma berisi 1 paragraf kosong bawaan Blocknote
-      const isServerEmpty = serverBlocks.length === 0;
-      const isLocalEmpty = 
-        localBlocks.length === 0 || 
-        (localBlocks.length === 1 && localBlocks[0].type === "paragraph" && (!localBlocks[0].content || (Array.isArray(localBlocks[0].content) && localBlocks[0].content.length === 0)));
-
-      if (isServerEmpty && isLocalEmpty) {
-        return false; // Sama-sama kosong, berarti tidak ada konflik.
+      // KITA BANDINGKAN SERVER SAAT INI DENGAN SERVER TERAKHIR YANG KITA TAHU
+      // Jika sama (meskipun dua-duanya null/kosong), berarti tidak ada orang lain yang ubah!
+      if (currentServerString === lastKnownServerRef.current) {
+        return false;
       }
 
-      // Jika sama-sama ada isinya, bandingkan stringnya
-      const normServer = JSON.stringify(serverBlocks);
-      const normLocal = JSON.stringify(localBlocks);
+      // Jika kodenya sampai sini, berarti currentServerString BEDA dengan lastKnownServerRef
+      // Artinya ada perangkat lain / orang lain yang sudah menimpa server
+      setConflictData(currentServerString); 
+      return true;
 
-      if (normServer !== normLocal) {
-        // Simpan dalam format string array agar bisa di-replace nanti
-        setConflictData(JSON.stringify(serverBlocks)); 
-        return true;
-      }
-      
-      return false;
     } catch (error) {
       console.error("Gagal mengecek server:", error);
-      return false;
+      return false; // Anggap aman jika gagal fetch
     }
   };
 
-  // --- Background Routine ---
   useEffect(() => {
     const performRoutine = async () => {
       if (!navigator.onLine || conflictData) return;
@@ -165,6 +152,10 @@ export default function Editor({
           if (onSave) {
             await onSave(editor.document);
           }
+          
+          // SETELAH BERHASIL SAVE: Update "ingatan" server kita dengan data yang baru disave
+          lastKnownServerRef.current = JSON.stringify(editor.document);
+          
           hasUnsavedChanges.current = false;
           setHasUnsavedUI(false);
           setLastSynced(new Date());
@@ -196,13 +187,15 @@ export default function Editor({
     if (!conflictData) return;
     try {
       const parsedServerData = JSON.parse(conflictData);
-      // Jika dari server kosong array [], Blocknote butuh undefined untuk mereset
       if (parsedServerData.length === 0) {
          editor.replaceBlocks(editor.document, [{ type: "paragraph", content: [] }]);
       } else {
          editor.replaceBlocks(editor.document, parsedServerData);
       }
 
+      // Update ingatan kita dengan data server
+      lastKnownServerRef.current = conflictData;
+      
       localStorage.setItem(storageKey, conflictData);
       hasUnsavedChanges.current = false;
       setHasUnsavedUI(false);
@@ -219,7 +212,13 @@ export default function Editor({
       if (onSave) {
         await onSave(editor.document);
       }
-      localStorage.setItem(storageKey, JSON.stringify(editor.document));
+      
+      const currentDocString = JSON.stringify(editor.document);
+      
+      // Update ingatan kita dengan data yang baru saja kita paksa save
+      lastKnownServerRef.current = currentDocString;
+      
+      localStorage.setItem(storageKey, currentDocString);
       hasUnsavedChanges.current = false;
       setHasUnsavedUI(false);
       setLastSynced(new Date());
@@ -247,12 +246,12 @@ export default function Editor({
                 >
                   <GitMerge />
                   resolve the conflict
-                </Button>
+                </Button> 
               }
             />
           )}
 
-          <AlertDialogContent className={"w-auto"}>
+          <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle>Perbedaan Data Ditemukan</AlertDialogTitle>
               <AlertDialogDescription>

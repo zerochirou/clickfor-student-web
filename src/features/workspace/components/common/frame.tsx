@@ -7,17 +7,20 @@ import {
 } from "@/components/ui/sidebar";
 import { Subject } from "@/types/subject";
 import { ThemeToggle } from "@/components/common/theme-toggle/theme-toggle";
+import { Task } from "@/types/task";
 
 export function WorkspaceFrame({
   children,
   subjects,
+  tasks,
 }: {
   children: React.ReactNode;
   subjects: Subject[];
+  tasks: Task[];
 }) {
   return (
     <SidebarProvider defaultOpen={true}>
-      <AppSidebar subjects={subjects} />
+      <AppSidebar subjects={subjects} tasks={tasks} />
       <SidebarInset>
         <header className="md:flex hidden p-2  shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
           <div className="pr-4 flex items-center gap-2">

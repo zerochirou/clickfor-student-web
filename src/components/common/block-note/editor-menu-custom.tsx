@@ -11,24 +11,25 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 export const CustomSlashMenu = (
   props: SuggestionMenuProps<DefaultReactSuggestionItem>,
 ) => {
-  // Fungsi untuk menutup menu secara paksa (programmatically)
   const handleCloseMenu = () => {
-    // BlockNote mendengarkan tombol 'Escape' untuk dismiss menu
     document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }));
   };
 
   return (
-    <div className="z-50 flex w-[320px] flex-col gap-2 rounded-md border bg-popover p-2 text-popover-foreground shadow-md animate-in fade-in-80">
+    // 1. Tambahkan overflow-hidden di container utama agar tidak ada yang bocor keluar dari border radius
+    <div className="z-50 flex w-[320px] flex-col gap-2 rounded-md border bg-popover p-2 text-popover-foreground shadow-md animate-in fade-in-80 overflow-hidden">
+      
       {/* Header */}
-      <div className="px-2 pt-1 pb-1">
+      <div className="px-2 pt-1 pb-1 shrink-0">
         <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
           Slash Menu
         </span>
       </div>
 
-      {/* Area Scroll untuk Daftar Menu */}
-      <ScrollArea className="h-[300px] w-full">
-        {/* pr-3 ditambahkan agar teks tidak tertimpa scrollbar */}
+      {/* Area Scroll 
+          2. Ubah h-[300px] menjadi max-h-[300px] agar menu bisa mengecil jika isinya sedikit 
+      */}
+      <ScrollArea className="max-h-[300px] w-full">
         <div className="flex flex-col gap-1 pr-3">
           {props.items.map((item, index) => {
             const isSelected = props.selectedIndex === index;
@@ -44,16 +45,18 @@ export const CustomSlashMenu = (
                     : "hover:bg-accent hover:text-accent-foreground",
                 )}
               >
-                {/* Ikon Item */}
-                <div className="mr-3 flex h-4 w-4 items-center justify-center">
+                {/* Ikon Item (tambahkan shrink-0 agar ikon tidak gepeng) */}
+                <div className="mr-3 flex h-4 w-4 shrink-0 items-center justify-center">
                   {item.icon}
                 </div>
 
-                {/* Teks Item */}
-                <div className="flex flex-col">
-                  <span className="font-medium">{item.title}</span>
+                {/* Teks Item 
+                    3. Tambahkan min-w-0 di sini dan truncate di span agar teks yang panjang dipotong dengan "..."
+                */}
+                <div className="flex flex-col min-w-0 w-full">
+                  <span className="font-medium truncate">{item.title}</span>
                   {item.subtext && (
-                    <span className="text-[10px] leading-snug text-muted-foreground">
+                    <span className="text-[10px] leading-snug text-muted-foreground truncate">
                       {item.subtext}
                     </span>
                   )}
@@ -67,7 +70,7 @@ export const CustomSlashMenu = (
       {/* Tombol Tutup Menu */}
       <div
         onClick={handleCloseMenu}
-        className="mt-1 cursor-pointer rounded-sm bg-muted/50 px-2 py-2 text-center text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+        className="mt-1 shrink-0 cursor-pointer rounded-sm bg-muted/50 px-2 py-2 text-center text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
       >
         Tutup Menu (Esc)
       </div>
