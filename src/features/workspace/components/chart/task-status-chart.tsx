@@ -100,6 +100,7 @@ export function TaskStatusRadialChart({ tasks }: TaskStatusRadialChartProps) {
               {/* Tooltip agar pengguna bisa melihat detail jumlah saat di-hover */}
               <ChartTooltip
                 cursor={false}
+                // {/*// @ts-expect-error recharts type mismatch*/}
                 content={<ChartTooltipContent hideLabel nameKey="status" />}
               />
               
