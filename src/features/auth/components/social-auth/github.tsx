@@ -8,7 +8,7 @@ export function GithubAuth() {
   const signIn = async () => {
     await authClient.signIn.social({
       provider: 'github',
-      callbackURL: 'http://localhost:3000/workspace',
+      callbackURL: 'https://clickfor.run/workspace',
     });
   };
   return (
