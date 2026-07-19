@@ -109,7 +109,7 @@ export default function Editor({
       const rawLatest = await onFetchLatest();
       
       // Fungsi untuk menormalisasi data dari server (amankan null / string kosong)
-      const parseServerData = (data: any) => {
+      const parseServerData = (data: null | string) => {
         if (!data || data === "null" || data === "") return [];
         if (typeof data === "string") {
           try {
