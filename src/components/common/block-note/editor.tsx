@@ -57,6 +57,26 @@ export default function Editor({
   const hasUnsavedChanges = useRef(false);
   const storageKey = `editor_draft_${documentId}`;
 
+  // --- SOLUSI 1: Fungsi aman untuk mengambil data awal (Hindari Null) ---
+  const getInitialData = () => {
+    if (typeof window === "undefined") return undefined;
+    
+    try {
+      const localDraft = localStorage.getItem(storageKey);
+      if (localDraft && localDraft !== "null" && localDraft !== "[]") {
+        return JSON.parse(localDraft);
+      }
+      if (initialContent && initialContent !== "null" && initialContent !== "[]") {
+        return JSON.parse(initialContent);
+      }
+    } catch (e) {
+      console.error("Gagal mem-parsing data awal", e);
+    }
+    
+    // Kembalikan undefined agar BlockNote membuat array kosong standar dengan aman
+    return undefined; 
+  };
+
   const editor = useCreateBlockNote({
     dictionary: {
       ...en,
@@ -71,12 +91,7 @@ export default function Editor({
       cellTextColor: true,
       headers: true,
     },
-    initialContent:
-      typeof window !== "undefined"
-        ? JSON.parse(
-            localStorage.getItem(storageKey) || initialContent || "null",
-          )
-        : undefined,
+    initialContent: getInitialData(), // Menggunakan fungsi yang aman
   });
 
   useEffect(() => {
@@ -85,32 +100,51 @@ export default function Editor({
 
   const { resolvedTheme } = useTheme();
   const currentTheme =
-    resolvedTheme === "light" || resolvedTheme === "dark"
-      ? resolvedTheme
-      : "dark";
+    resolvedTheme === "light" || resolvedTheme === "dark" ? resolvedTheme : "dark";
 
-  // --- 1. Fungsi Cek Perbedaan ---
+  // --- SOLUSI 2: Pengecekan Perbedaan Cerdas (Abaikan Null vs Paragraf Kosong) ---
   const checkServerDifference = async () => {
     if (!onFetchLatest) return false;
     try {
       const rawLatest = await onFetchLatest();
-      const serverString =
-        typeof rawLatest === "string"
-          ? rawLatest
-          : JSON.stringify(rawLatest || []);
-      const localString = JSON.stringify(editor.document);
+      
+      // Fungsi untuk menormalisasi data dari server (amankan null / string kosong)
+      const parseServerData = (data: any) => {
+        if (!data || data === "null" || data === "") return [];
+        if (typeof data === "string") {
+          try {
+            const parsed = JSON.parse(data);
+            return Array.isArray(parsed) ? parsed : [];
+          } catch {
+            return [];
+          }
+        }
+        return Array.isArray(data) ? data : [];
+      };
 
-      const normServer = JSON.stringify(
-        JSON.parse(serverString === "null" ? "[]" : serverString),
-      );
-      const normLocal = JSON.stringify(
-        JSON.parse(localString === "null" ? "[]" : localString),
-      );
+      const serverBlocks = parseServerData(rawLatest);
+      const localBlocks = editor.document;
+
+      // CEK CERDAS: Jika dokumen baru (server kosong) dan editor lokal juga cuma berisi 1 paragraf kosong bawaan Blocknote
+      const isServerEmpty = serverBlocks.length === 0;
+      const isLocalEmpty = 
+        localBlocks.length === 0 || 
+        (localBlocks.length === 1 && localBlocks[0].type === "paragraph" && (!localBlocks[0].content || (Array.isArray(localBlocks[0].content) && localBlocks[0].content.length === 0)));
+
+      if (isServerEmpty && isLocalEmpty) {
+        return false; // Sama-sama kosong, berarti tidak ada konflik.
+      }
+
+      // Jika sama-sama ada isinya, bandingkan stringnya
+      const normServer = JSON.stringify(serverBlocks);
+      const normLocal = JSON.stringify(localBlocks);
 
       if (normServer !== normLocal) {
-        setConflictData(serverString); // Set data konflik
+        // Simpan dalam format string array agar bisa di-replace nanti
+        setConflictData(JSON.stringify(serverBlocks)); 
         return true;
       }
+      
       return false;
     } catch (error) {
       console.error("Gagal mengecek server:", error);
@@ -118,15 +152,13 @@ export default function Editor({
     }
   };
 
-  // --- 2. Background Routine (Cek & Auto-Save tiap 10 detik) ---
+  // --- Background Routine ---
   useEffect(() => {
     const performRoutine = async () => {
-      // Abaikan jika sedang offline atau sudah dalam mode konflik
       if (!navigator.onLine || conflictData) return;
 
       const hasDiff = await checkServerDifference();
 
-      // Jika tidak ada perbedaan DAN ada editan lokal, langsung simpan
       if (!hasDiff && hasUnsavedChanges.current) {
         setIsSyncing(true);
         try {
@@ -157,14 +189,19 @@ export default function Editor({
       clearInterval(syncInterval);
       window.removeEventListener("beforeunload", handleBeforeUnload);
     };
-  }, [conflictData]); // Hanya re-run effect jika status konflik berubah
+  }, [conflictData]); 
 
-  // --- 3. Handler Dialog: Ganti dengan Versi Server ---
+  // --- Handler Dialog ---
   const handleUseServerVersion = () => {
     if (!conflictData) return;
     try {
       const parsedServerData = JSON.parse(conflictData);
-      editor.replaceBlocks(editor.document, parsedServerData);
+      // Jika dari server kosong array [], Blocknote butuh undefined untuk mereset
+      if (parsedServerData.length === 0) {
+         editor.replaceBlocks(editor.document, [{ type: "paragraph", content: [] }]);
+      } else {
+         editor.replaceBlocks(editor.document, parsedServerData);
+      }
 
       localStorage.setItem(storageKey, conflictData);
       hasUnsavedChanges.current = false;
@@ -175,12 +212,10 @@ export default function Editor({
     }
   };
 
-  // --- 4. Handler Dialog: Paksa Simpan Versi Saya ---
   const handleForceOverwrite = async () => {
     if (!conflictData) return;
     setIsSyncing(true);
     try {
-      // By-pass cek konflik, langsung timpa server
       if (onSave) {
         await onSave(editor.document);
       }
@@ -188,7 +223,7 @@ export default function Editor({
       hasUnsavedChanges.current = false;
       setHasUnsavedUI(false);
       setLastSynced(new Date());
-      setConflictData(null); // Tutup peringatan
+      setConflictData(null);
     } catch (error) {
       console.error("Gagal memaksa simpan ke server", error);
     } finally {
@@ -198,9 +233,8 @@ export default function Editor({
 
   return (
     <div className="relative">
-      {/* --- HEADER: TOMBOL SHADCN & STATUS --- */}
       <div className="flex items-center justify-between text-xs text-muted-foreground font-medium mx-auto max-w-3xl mb-4">
-        {/* Tombol hanya aktif (bisa diklik) ketika ada perbedaan */}
+        
         <AlertDialog>
           {conflictData && (
             <AlertDialogTrigger
@@ -237,7 +271,6 @@ export default function Editor({
               >
                 <HardDrive /> Use Server Version
               </AlertDialogCancel>
-              {/* Tombol Action diberi style destructive bawaan shadcn untuk peringatan ekstra */}
               <AlertDialogAction
                 onClick={handleForceOverwrite}
                 variant={"outline"}
@@ -248,7 +281,6 @@ export default function Editor({
           </AlertDialogContent>
         </AlertDialog>
 
-        {/* Status Sinkronisasi Teks */}
         <div className="flex items-center">
           {conflictData ? (
             <Badge variant={'destructive'} className="animate-pulse flex items-center gap-1 text-destructive">
@@ -260,26 +292,25 @@ export default function Editor({
             </Badge>
           ) : hasUnsavedUI ? (
             <Badge variant={"secondary"} className="animate-pulse">
-              <Pencil />There are local changes
+              <Pencil className="w-3 h-3 mr-1" /> There are local changes
             </Badge>
           ) : lastSynced ? (
             <Badge variant={"secondary"}>
-              <HardDriveUpload />
+              <HardDriveUpload className="w-3 h-3 mr-1" />
               Saved on {format(lastSynced, "HH:mm")}
             </Badge>
           ) : (
-            <Badge variant={"outline"}><CircleCheck />There has been no change</Badge>
+            <Badge variant={"outline"}><CircleCheck className="w-3 h-3 mr-1" /> There has been no change</Badge>
           )}
         </div>
       </div>
 
-      {/* --- EDITOR VIEW --- */}
       <BlockNoteView
         theme={currentTheme}
         slashMenu={false}
         editor={editor}
         onChange={() => {
-          if (conflictData) return; // Nonaktifkan auto-save lokal kalau sedang konflik
+          if (conflictData) return; 
 
           const currentData = editor.document;
           localStorage.setItem(storageKey, JSON.stringify(currentData));
