@@ -22,7 +22,7 @@ export function WorkspaceFrame({
     <SidebarProvider defaultOpen={true}>
       <AppSidebar subjects={subjects} tasks={tasks} />
       <SidebarInset>
-        <header className="md:flex hidden p-2  shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
+        <header className="p-2  shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
           <div className="pr-4 flex items-center gap-2">
             <SidebarTrigger
               className={
@@ -31,7 +31,9 @@ export function WorkspaceFrame({
             />
             <ThemeToggle />
           </div>
-          <BreadcrumbDynamic />
+          <div className="md:flex hidden">
+            <BreadcrumbDynamic />
+          </div>
         </header>
         <div className="flex flex-1 flex-col gap-4 md:p-4 p-2 pt-0">
           {children}

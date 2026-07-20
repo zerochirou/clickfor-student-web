@@ -64,13 +64,13 @@ export default async function WorkspacePage() {
         <DataTable columns={columns} data={subjects.data} />
       </div>
       <div className="grid grid-cols-6 gap-4 items-end">
-        <div className="col-span-2">
+        <div className="md:col-span-2 col-span-6">
           <SubjectRadarChart subjects={subjects.data} />
         </div>
-        <div className="col-span-2">
+        <div className="md:col-span-2 col-span-6">
           <SubjectPieChart subjects={subjects.data} />
         </div>
-        <div className="col-span-2">
+        <div className="md:col-span-2 col-span-6">
           <TaskStatusRadialChart tasks={tasks.data} />
         </div>
       </div>
